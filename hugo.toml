@@ -2,7 +2,7 @@ baseURL = "https://aviadhaham.me"
 relativeURLs = "True"
 languageCode = "en-us"
 copyright = "© 2024 Aviad Haham. All rights reserved."
-title = "Aviad's Website"
+title = "aviadhaham.me"
 theme = "risotto"
 
 [params.theme]
