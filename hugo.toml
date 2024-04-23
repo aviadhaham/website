@@ -1,0 +1,30 @@
+baseURL = ""
+relativeURLs = "True"
+languageCode = "en-us"
+title = "Aviad's Website"
+theme = "risotto"
+
+[params.theme]
+palette = "windows-95"
+
+[[menu.main]]
+identifier = "blog"
+name = "blog"
+title = "blog"
+url = "/posts"
+
+[[menu.main]]
+identifier = "projects"
+name = "projects"
+title = "projects"
+url = "/projects"
+
+[[params.socialLinks]]
+icon = "fa-brands fa-github"
+title = "GitHub"
+url = "https://github.com/aviadhaham"
+
+[[params.socialLinks]]
+icon = "fa-brands fa-linkedin"
+title = "LinkedIn"
+url = "https://www.linkedin.com/in/aviadhaham"
