@@ -6,7 +6,7 @@ title = "Aviad's Website"
 theme = "risotto"
 
 [params.theme]
-palette = "dracula"
+palette = "tokyo-night-dark"
 
 [[menu.main]]
 identifier = "blog"
