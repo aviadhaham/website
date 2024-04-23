@@ -5,7 +5,7 @@ title = "Aviad's Website"
 theme = "risotto"
 
 [params.theme]
-palette = "windows-95"
+palette = "dracula"
 
 [[menu.main]]
 identifier = "blog"
