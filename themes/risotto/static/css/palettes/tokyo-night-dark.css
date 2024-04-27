@@ -18,3 +18,22 @@
   --base0E: #BB9AF7;
   --base0F: #F7768E;
 }
+
+h1:before {
+  color: var(--base0F);
+}
+h2:before {
+  color: var(--base0D);
+}
+h3:before {
+  color: var(--base0B);
+}
+h4:before {
+  color: var(--base0E);
+}
+h5:before {
+  color: var(--base0C);
+}
+h6:before {
+  color: var(--base07);
+}
