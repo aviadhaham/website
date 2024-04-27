@@ -17,7 +17,7 @@ h4,
 h5, 
 h6 {
     font-size: 1rem;
-    margin: 1.5rem 0 0 0;
+    margin: 2.3rem 0 1rem 0;
     font-weight: 600;
 }
 
@@ -45,15 +45,6 @@ h3:before { content: "### "; }
 h4:before { content: "#### "; }
 h5:before { content: "##### "; }
 h6:before { content: "###### "; }
-
-h1:before, 
-h2:before, 
-h3:before, 
-h4:before, 
-h5:before, 
-h6:before {
-    color: var(--muted);
-}
 
 h1:first-child {
     margin-top: 0;
@@ -94,11 +85,11 @@ ol ol {
 
 ul li::marker {
     content: '∗\00A0';
-    color: var(--muted);
+    color: var(--base06);
 }
 
 ol li::marker {
-    color: var(--muted);
+    color: var(--base06);
 }
 
 dt {
