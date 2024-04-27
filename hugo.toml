@@ -1,9 +1,10 @@
 baseURL = "https://aviadhaham.me"
-relativeURLs = "True"
+relativeURLs = false
 languageCode = "en-us"
 copyright = "© 2024 Aviad Haham. All rights reserved."
 title = "aviadhaham.me"
 theme = "risotto"
+enableRobotsTXT = true
 
 [params.theme]
 palette = "tokyo-night-dark"
