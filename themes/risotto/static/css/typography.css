@@ -155,6 +155,7 @@ pre {
 b,
 strong {
     font-weight: 600;
+    color: var(--base0C);
 }
 
 /* Highlighting */
