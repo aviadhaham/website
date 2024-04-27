@@ -136,7 +136,7 @@ kbd,
 samp {
     background: var(--inner-bg) !important;
     font-family: var(--font-monospace);
-    color: var(--off-fg);
+    color: var(--fg);
 }
 
 pre {
