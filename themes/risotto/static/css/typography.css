@@ -120,7 +120,6 @@ blockquote::before {
     position: absolute;
     left: -1.5rem;
     content: ">";
-    color: var(--muted);
 }
 
 .twitter-tweet::before {
