@@ -14,9 +14,10 @@ In this blog post, I'll explore our approach to establishing a scalable and main
 
 **I will delve into how we**:
 
-1. Created a powerful and declarative GitOps framework using `ApplicationSet`s. This approach not only simplifies the maintenance of our deployments but also allows us to reconstruct our entire environment with ease. The use of `ApplicationSet`s provides us with a scalable solution that can handle a growing number of applications and environments.
-
-2. Manage many deployments across multiple environments. We'll discuss how we handle the complexities of managing multiple deployments.
+1. Bootstrap and manage Argo CD configurations.
+2. Structure our `ApplicationSet`s and GitOps deployments repository for scalability (utilizing the `git` generator).
+3. Leverage `ApplicationSet`s to automate deployment processes.
+4. Manage and scale our deployments across multiple clusters and environments.
 
 > _I provided real examples, from two teams, Octo and Datamine2, to give you a better understanding of how we structure our deployments._
 
