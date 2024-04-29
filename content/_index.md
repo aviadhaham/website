@@ -5,8 +5,13 @@ title: Index
 # Greetings
 <br/><br/>
 
-Hello, my name is Aviad Haham, and I specialize in DevOps Engineering.
+- I'm Aviad Haham, a DevOps Engineer and a purist at heart, with a passion for anything that involves technology.
 
-At present, I am employed as a DevOps Engineer with [Nexxen](https://nexxen.com).
+- I'm a "Certified Kubernetes Administrator", "Certified Linux Administrator", "Certified AWS Cloud Practitioner", and more.
 
-This site serves as my digital journal where I document my insights and experiences. It also provides a glimpse into the projects that I have undertaken or am presently engaged with during my leisure time.
+- At present, I am employed as a DevOps Engineer with [Nexxen](https://nexxen.com).
+
+- This site serves as a digital journal for my learnings, insights and experiences.
+It's also a showcase for the projects I've worked on in my free time, both past and present.
+
+> If you have any questions or feedback, feel free to reach out to me via the social links in the sidebar.
