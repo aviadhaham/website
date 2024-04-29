@@ -12,10 +12,11 @@ The shift to a declarative GitOps approach using `ApplicationSet`s has significa
 
 In this blog post, I'll explore our approach to establishing a scalable and maintainable GitOps infrastructure using the Argo CD `ApplicationSets` CRD.
 
-**I'll focus on how we**:
-1. Created a powerful and declarative GitOps framework using `ApplicationSet`s that can be easily maintained and reconstructed
-2. Manage many deployments across multiple environments
-3. Integrate with both Kustomize and Helm, seamlessly.
+**I will delve into how we**:
+
+1. Created a powerful and declarative GitOps framework using `ApplicationSet`s. This approach not only simplifies the maintenance of our deployments but also allows us to reconstruct our entire environment with ease. The use of `ApplicationSet`s provides us with a scalable solution that can handle a growing number of applications and environments.
+
+2. Manage many deployments across multiple environments. We'll discuss how we handle the complexities of managing multiple deployments.
 
 > _I provided real examples, from two teams, Octo and Datamine2, to give you a better understanding of how we structure our deployments._
 
