@@ -1,7 +1,7 @@
 ---
 title: 'Implementing (Scalable) GitOps With Argo CD and ApplicationSets: A Case Study'
 tags: [devops, argocd, gitops, kubernetes, applicationsets]
-date: 2024-04-27
+date: 2024-04-28
 slug: implementing-gitops-with-argo-cd-and-applicationsets
 toc: true
 draft: true
@@ -13,6 +13,8 @@ In this blog post, I'll explore our approach to establishing a scalable and main
 1. Created a powerful and declarative GitOps framework using `ApplicationSet`s that can be easily maintained and reconstructed
 2. Manage many deployments across multiple environments
 3. Integrate with both Kustomize and Helm, seamlessly.
+
+
 
 ## Introduction to Our GitOps Setup
 
@@ -200,139 +202,105 @@ To make changes (add, delete, or edit), simply update the `appprojects` and `app
 ## Our ApplicationSets Strategies
 
 ### GitLab Subgroup-based `ApplicationSet`s
+
 `ApplicationSet`s are primarily organized per GitLab subgroup, automatically generating Argo CD `Application`s for each service or application within the subgroup.
 
-**Orphan `ApplicationSet`s** (**for applications/repos that do not belong to any subgroup**)
-* As we have many applications that do not belong to any subgroup,
+* **"Orphans" `ApplicationSet`s** (**for applications/repos that do not belong to any subgroup**)
+As we have many applications that do not belong to any subgroup,
 we handle them as “orphans” (both in terms of `ApplicationSet`s and in the `gitops-deployments` repo).
 
-**Prod and Non-Prod Environments**
+  > **Rationale**:
+    We encountered issues when creating an `ApplicationSet` that watches the root hierarchy of the group, as it did not behave as expected. Instead, we decided to separate the "orphans" into a different directory and handle the path logic in the CI using simple bash code. For more details on how we resolved this issue, refer to the [Q&A](#qa) section.
+
+### Prod and Non-Prod Environments
 * The production environments are handled by `ApplicationSet`s that target directories with a `prod` prefix in their paths, and non-production environments with a `non-prod` prefix.
 
-* The specific `ApplicationSet` “configuration” JSON files (`appset_config*.json`) within these directories provide configuration/parameters for the `ApplicationSet` templates.
+  > **Rationale**: 
+    By using prefixes for `prod*` and `non-prod*`, we can effectively manage different types of deployments in separate `ApplicationSet`s. This approach also ensures that the user only needs to add these prefixes when they want the deployments to be picked up and watched by the corresponding `ApplicationSet` for deployment.
 
 
-**Real example `ApplicationSet` config that we use for our own DevOps team ("Octo")**:
+### Examples
+Real example `ApplicationSet`s config that we use for our own DevOps team ("Octo"):
 
-* Infra:
+* **Infra**:
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: octo-infra-prod
-  namespace: argocd
-spec:
-  generators:
-    - git:
-        repoURL: git@git.company.com:octo/gitops-deployments.git
-        revision: main
-        files:
-          - path: deployments/octo/infra/**/envs/prod*/appset_config*.json
-  template:
-    metadata:
-      name: "octo-{{path[3]}}-{{cluster.name}}-{{env}}"
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io
-      namespace: argocd
-    spec:
-      project: octo-infra-prod
-      source:
-        repoURL: git@git.company.com:octo/gitops-deployments.git
-        targetRevision: main
-        path: "{{path}}"
-      destination:
-        server: "{{cluster.address}}"
-        namespace: "{{namespace}}"
-      syncPolicy:
-        automated:
-          selfHeal: true
-          prune: true
-        syncOptions:
-          - CreateNamespace=true
-```
+  ```yaml
+  apiVersion: argoproj.io/v1alpha1
+  kind: ApplicationSet
+  metadata:
+    name: octo-infra-prod
+    namespace: argocd
+  spec:
+    generators:
+      - git:
+          repoURL: git@git.company.com:octo/gitops-deployments.git
+          revision: main
+          files:
+            - path: deployments/octo/infra/**/envs/prod*/appset_config*.json
+    template:
+      metadata:
+        name: "octo-{{path[3]}}-{{cluster.name}}-{{env}}"
+        finalizers:
+          - resources-finalizer.argocd.argoproj.io
+        namespace: argocd
+      spec:
+        project: octo-infra-prod
+        source:
+          repoURL: git@git.company.com:octo/gitops-deployments.git
+          targetRevision: main
+          path: "{{path}}"
+        destination:
+          server: "{{cluster.address}}"
+          namespace: "{{namespace}}"
+        syncPolicy:
+          automated:
+            selfHeal: true
+            prune: true
+          syncOptions:
+            - CreateNamespace=true
+  ```
 
-As you can see, the `ApplicationSet` is configured to watch the `infra` directory within the `octo` subgroup in the `gitops-deployments` repo, targeting the `prod` environment. The `appset_config*.json` files within the `envs/prod` directory provide the necessary configuration for the `ApplicationSet`.
+* **Orphans**:
 
-* Orphans:
+  ```yaml
+  apiVersion: argoproj.io/v1alpha1
+  kind: ApplicationSet
+  metadata:
+    name: octo-orphans-prod
+    namespace: argocd
+  spec:
+    generators:
+      - git:
+          repoURL: git@git.company.com:octo/gitops-deployments.git
+          revision: main
+          files:
+            - path: deployments/octo/orphans/**/envs/prod*/appset_config*.json
+    template:
+      metadata:
+        name: "octo-{{path[3]}}-{{cluster.name}}-{{env}}"
+        finalizers:
+          - resources-finalizer.argocd.argoproj.io
+        namespace: argocd
+      spec:
+        project: octo-orphans-prod
+        source:
+          repoURL: git@git.company.com:octo/gitops-deployments.git
+          targetRevision: main
+          path: "{{path}}"
+        destination:
+          server: "{{cluster.address}}"
+          namespace: "{{namespace}}"
+        syncPolicy:
+          automated:
+            selfHeal: true
+            prune: true
+          syncOptions:
+            - CreateNamespace=true
+  ```
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: octo-orphans-prod
-  namespace: argocd
-spec:
-  generators:
-    - git:
-        repoURL: git@git.company.com:octo/gitops-deployments.git
-        revision: main
-        files:
-          - path: deployments/octo/orphans/**/envs/prod*/appset_config*.json
-  template:
-    metadata:
-      name: "octo-{{path[3]}}-{{cluster.name}}-{{env}}"
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io
-      namespace: argocd
-    spec:
-      project: octo-orphans-prod
-      source:
-        repoURL: git@git.company.com:octo/gitops-deployments.git
-        targetRevision: main
-        path: "{{path}}"
-      destination:
-        server: "{{cluster.address}}"
-        namespace: "{{namespace}}"
-      syncPolicy:
-        automated:
-          selfHeal: true
-          prune: true
-        syncOptions:
-          - CreateNamespace=true
-```
+These `ApplicationSet`s targets the `orphans`/`infra` directory within the `octo` subgroup in the `gitops-deployments` repo, focusing on the `prod` environment.
 
-This `ApplicationSet` targets the `orphans` directory within the `octo` subgroup in the `gitops-deployments` repo, focusing on the `prod` environment. The `appset_config*.json` files within the `envs/prod` directory provide the necessary configuration for the `ApplicationSet`.
-
-
-**Example `appset_config.json` file**:
-
-* _taken from `deployments/sunflower/datamine2/datamine-amoeba-appprd/envs/prod`, from the `gitops-deployments` repo_
-* _Of course, you can structure your `ApplicationSet` and your JSON file in any way that suits your organization's needs._
-
-```json
-{
-  "env": "prod",
-  "cluster": {
-    "name": "dc1-november",
-    "address": "https://10.1.1.1:6443",
-    "dc": "dc1"
-  }
-}
-```
-
-# ########
-# LAST STOPPED: HERE
-# ########
-
-To overcome that difference between the GitLab repositories heirarcy and the `gitops-deployments`, we implemented in the CI, a logic that checks if the repository is in the “root” / group level, and then adds to its path in `gitops-deployments`, the `orphans/` directory, so it will hit the right path in the gitops repo.
-
-  Rationale
-
-  1. Having Orphans Directory: We didn’t want to create an `ApplicationSet` that will watch the group’s root hierarchy, as it doesn’t behave well, we tried it. We prefered to separate the “orphans” to a different directory, and just handle the logic of path in the CI with simple bash code.
-  2. Prod and Non-Prod Separation: Having prefixes for `prod*` and `non-prod*` allows us to manage each “type” of deployment in a different `ApplicationSet`, and also enforce the user to add these prefixes as needed, only when he wants them to be picked up / watched by the `ApplicationSet` and hence deployed.
-
-
-### Example: CI/CD Integration
-
-Our CI/CD pipelines update kustomization endpoints in the `gitops-deployments` repository, triggering deployments through Argo CD when changes are detected. This ensures a seamless flow where new applications are added and outdated ones are removed without manual intervention.
-
-## Multi-Environment Management
-
-Our strategy for managing multiple environments includes:
-
-- **Distinct Paths:** Separate paths for production (`prod`) and non-production environments (`non-prod-staging`, `non-prod-sandbox`) allow us to create distinct sets of applications for each environment.
-- **Efficient Deployment Management:** This structure ensures that deployments are consistently managed across all environments.
+For more details about the `appset_config*.json` files, refer to the [Q&A](#qa) section.
 
 ## Integrating Kustomize and Helm
 
@@ -385,14 +353,6 @@ envs/
     ├── kustomization.yml
 ```
 
-Non-Prod AppSets:
-
-  As mentioned, these watch the non-prod* prefixed directories, creating applications based on the appset_config*.json files found within. Each config file leads to the creation of a new application targeting the specific non-production environment.
-
-Prod AppSets:
-
-  Similarly, the production ApplicationSet targets the directories that are prefixed with prod*, generating applications as defined by the configuration files present.
-
 AppProjects Strategy
 
 Overview of AppProjects
@@ -433,3 +393,36 @@ This enables flexibility by allowing Helm-based deployments to be patched and to
 How it works
 
 Kustomize allows deploying Helm releases by adding the —enable-helm flag in the kustomize build command. This was done by patching the argocd-cm ConfigMap and the AVP plugin resources (adding this flag to the kustomize build command)
+
+
+## Q&A
+
+* **Q**: How did you overcome the difference between the GitLab repositories heirarcy and the `gitops-deployments` repo heirarcy?
+* **A**: we implemented in the CI, a logic that checks if the repository is in the “root” / group level, and then adds to its path in `gitops-deployments`, the `orphans/` directory, so it will hit the right path in the gitops repo.
+  * **_Snippet from our Gitlab CI's `before_script` logic:_**
+    ```bash
+    if [[ $CI_PROJECT_PATH =~ ^[^/]+/[^/]+$ ]]; then
+      FULL_PROJECT_PATH="$CI_PROJECT_NAMESPACE/orphans/$CI_PROJECT_NAME"
+    else
+      FULL_PROJECT_PATH="$CI_PROJECT_PATH"
+    fi
+    ```
+---
+
+* **Q**: What are the `appset_config*.json` files?
+* **A**: The `appset_config*.json` files provide additional parameters for the `ApplicationSet`; that way we can combine both the ones we get from the `git` generator and the ones we define in the JSON file.
+
+  * **Example `appset_config.json` file**:
+    * _taken from `deployments/sunflower/datamine2/datamine-amoeba-appprd/envs/prod`, from the `gitops-deployments` repo_
+    * _Of course, you can structure your `ApplicationSet` and your JSON file in any way that suits your organization's needs._
+    ```json
+    {
+      "env": "prod",
+      "cluster": {
+        "name": "dc1-november",
+        "address": "https://10.1.1.1:6443",
+        "dc": "dc1"
+      }
+    }
+    ```
+
