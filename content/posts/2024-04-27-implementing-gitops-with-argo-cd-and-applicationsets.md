@@ -6,6 +6,8 @@ slug: implementing-gitops-with-argo-cd-and-applicationsets
 toc: true
 ---
 
+> _This infrastructure was developed at [Nexxen](https://nexxen.com), where I'm currently employed._
+
 Transitioning from the inefficient "[App of Apps](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern)" model, we adopted GitOps with Argo CD and `ApplicationSet`s for improved efficiency and reliability. The old system, with its hunderds of declarative Argo `Application`s and frequent manual changes them, was operationally taxing, error-prone and not scalable.
 
 The shift to a declarative GitOps approach using `ApplicationSet`s has significantly minimized manual interventions, enhancing the scalability and accuracy of our deployment processes.
