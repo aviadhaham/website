@@ -13,3 +13,9 @@ Create post:
 ```bash
 hugo new posts/(date +%Y-%m-%d)-title.md
 ```
+
+Create nugget:
+
+```bash
+hugo new nuggets/(date +%Y-%m-%d)-title.md
+```

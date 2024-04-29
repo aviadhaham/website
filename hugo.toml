@@ -10,6 +10,12 @@ enableRobotsTXT = true
 palette = "tokyo-night-dark"
 
 [[menu.main]]
+identifier = "nuggets"
+name = "nuggets"
+title = "nuggets"
+url = "/nuggets"
+
+[[menu.main]]
 identifier = "blog"
 name = "blog"
 title = "blog"
