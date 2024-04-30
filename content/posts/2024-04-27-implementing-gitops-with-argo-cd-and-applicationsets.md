@@ -174,7 +174,7 @@ Acts as the single source of truth for all declarative deployments within our or
                   ├── kustomization.yaml
   ```
 
-## Our Approach to Bootstrapping and Managing Argo CD
+## Our Approach to Bootstrapping and Managing Argo CD Configurations
 
 Although `ApplicationSet`s offer significant reductions in time and manual errors by automating deployment processes, integrating them with Kustomize has elevated their effectiveness.
 
