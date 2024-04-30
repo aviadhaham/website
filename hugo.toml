@@ -27,6 +27,10 @@ name = "projects"
 title = "projects"
 url = "/projects"
 
+[params.about]
+title = "Aviad Haham"
+description = "DevOps Engineer"
+
 [[params.socialLinks]]
 icon = "fa-brands fa-github"
 title = "GitHub"
