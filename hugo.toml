@@ -41,3 +41,6 @@ url = "https://www.linkedin.com/in/aviadhaham"
 icon = "fa-solid fa-envelope"
 title = "Email"
 url = "mailto:aviadhaham@outlook.com"
+
+[taxonomies]
+tag = "tags"
