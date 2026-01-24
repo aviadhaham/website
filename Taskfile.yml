@@ -1,0 +1,34 @@
+version: "3"
+
+tasks:
+  serve:
+    desc: Run Hugo server locally with drafts enabled
+    cmd: hugo server -D
+
+  new:post:
+    desc: Create a new blog post
+    cmd: hugo new posts/$(date +%Y-%m-%d)-{{.TITLE}}.md
+    vars:
+      TITLE: '{{default "new-post" .TITLE}}'
+    requires:
+      vars: [TITLE]
+
+  new:nugget:
+    desc: Create a new nugget
+    cmd: hugo new nuggets/$(date +%Y-%m-%d)-{{.TITLE}}.md
+    vars:
+      TITLE: '{{default "new-nugget" .TITLE}}'
+    requires:
+      vars: [TITLE]
+
+  build:
+    desc: Build the site for production
+    cmd: hugo
+
+  clean:
+    desc: Clean the public directory
+    cmd: rm -rf public
+
+  help:
+    desc: Show available tasks
+    cmd: task --list
