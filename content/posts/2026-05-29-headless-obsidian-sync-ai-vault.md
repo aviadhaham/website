@@ -94,8 +94,4 @@ Hermes container
 
 The point is simple: the agent and the human editor write into the same vault, but through a controlled host-side bridge.
 
-Short version:
-
-> Hermes writes to a host-mounted vault, Obsidian Sync keeps that vault aligned with my laptop, and the host permissions keep it sane.
-
-That’s the pattern I’d recommend if you want an agent to work inside your notes without turning the vault into an unsafe shared filesystem.
+A great pattern for anyone who want an agent to work inside your notes when the agent runs remotely and you don't share a filesystem
