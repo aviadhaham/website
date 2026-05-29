@@ -3,7 +3,7 @@ relativeURLs: false
 languageCode: en-us
 title: aviadhaham.me
 copyright: © 2024 Aviad Haham. All rights reserved.
-theme: PaperMod
+theme: etch
 enableRobotsTXT: true
 
 params:
@@ -17,13 +17,13 @@ params:
   homeInfoParams:
     Title: "Welcome \U0001F44B"
     Content: |
-        I'm Aviad Haham, a DevOps Engineer and a purist at heart, with a passion for anything that involves technology.
-        <br /><br />
-        I'm a "Certified Kubernetes Administrator", "Certified Linux Administrator", certified "Terraform Associate", certified "AWS Cloud Practitioner", and more.
-        <br /><br />
-        At present, I am employed as a DevOps Engineer with <a href="https://nexxen.com/" target="_blank">Nexxen</a>.
-        <br /><br />
-        This site serves as a digital journal for my learnings, insights and experiences. It's also a showcase for the projects I've worked on in my free time, both past and present.
+      I'm Aviad Haham, a DevOps Engineer and a purist at heart, with a passion for anything that involves technology.
+      <br /><br />
+      I'm a "Certified Kubernetes Administrator", "Certified Linux Administrator", certified "Terraform Associate", certified "AWS Cloud Practitioner", and more.
+      <br /><br />
+      At present, I am employed as a DevOps Engineer with <a href="https://nexxen.com/" target="_blank">Nexxen</a>.
+      <br /><br />
+      This site serves as a digital journal for my learnings, insights and experiences. It's also a showcase for the projects I've worked on in my free time, both past and present.
 
   socialIcons:
     - name: github
@@ -35,6 +35,11 @@ params:
 
 menu:
   main:
+    - identifier: about
+      name: About
+      title: about
+      url: /about
+
     - identifier: blog
       name: Blog
       title: blog
