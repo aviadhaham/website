@@ -4,16 +4,16 @@ tags: [macos, launchd, devops, automation]
 date: 2026-11-06
 slug: launchd-fleet-personal-machine-sre
 toc: true
-description: "How I select a launchd fleet per profile: two agents on the personal Mac, a much larger work fleet, and a shared contract of ticks, presence gates, and HTML reports."
+description: "The personal profile loads brew-upgrade and nvim-update. The work profile uses DF_LAUNCHD to load a much larger set from the same launchd directory."
 ---
 
-My work Mac runs a fleet of tiny launchd agents. The personal Mac runs two. Same clone, same installer. The only switch is `DF_LAUNCHD` in the profile.
+My work Mac loads many launchd agents, and the personal Mac loads two. Both machines install from the same clone. `DF_LAUNCHD` in the profile is the list that differs.
 
-## From `modules/launchd-*` to `launchd/`
+## DF_LAUNCHD replaced a module per agent
 
-Each job used to be a module, `modules/launchd-<name>/`, enabled with `DF_MODULES`. Nothing in that module was for the shell to source. It existed so a profile could turn the job on, and every one of them shipped the same `hooks/postinstall` calling `launchd_install`.
+I listed each agent in `DF_MODULES`, under `modules/launchd-<name>/`. `hooks/postinstall` was the whole module, and every copy called `launchd_install`.
 
-I collapsed that. Jobs live under `launchd/`, and the profile lists names in `DF_LAUNCHD`, the same kind of array as `DF_MACOS_DEFAULTS`. The installer checks that `launchd/<name>/com.user.<name>.plist` and `<name>.sh` exist, then loads only the names in the array. An empty array installs nothing. `--no-launchd` skips the step. `--only` and `--skip` still filter modules, not these agents.
+Agents now live under `launchd/`. A profile lists them in `DF_LAUNCHD`, as it lists `DF_MACOS_DEFAULTS`. `install.sh` checks for `launchd/<name>/com.user.<name>.plist` and `launchd/<name>/<name>.sh`. `launchd_apply` in `lib/steps.sh` loads only those names.
 
 ```bash
 for name in "${DF_LAUNCHD[@]}"; do
@@ -22,11 +22,13 @@ for name in "${DF_LAUNCHD[@]}"; do
 done
 ```
 
-The script stays in the clone and runs in place. `launchd_install` substitutes `__HOME__` and `__DOTFILES__` into a plist under `~/Library/LaunchAgents`, creates `~/.local/state/<name>/` (launchd will not create the log directory), and bootstraps again only when that rendered plist changed or the label is not loaded. A later pass put each job in its own directory, so a TypeScript agent can keep a package and tests next to a thin shell launcher. Removing a name from `DF_LAUNCHD` does not unload a running agent. That still needs `launchctl bootout` and deleting the plist.
+An empty `DF_LAUNCHD` loads no agents, and `--no-launchd` skips the step. `--only` and `--skip` filter modules and do not filter agents. The `.sh` file stays in the clone. `launchd_install` replaces `__HOME__` and `__DOTFILES__` in the plist under `~/Library/LaunchAgents`, and it creates `~/.local/state/<name>/` because launchd does not create the log directory. `launchctl bootstrap` runs only if the rendered plist changed or the label is not loaded.
 
-## Two lines versus a fleet
+In October 2026 each `launchd/<name>.sh` moved into `launchd/<name>/<name>.sh`. `skill-upstream` and `pi-upstream` keep `package.json` and tests next to the shell script that starts the `.ts` file. If I remove a name from `DF_LAUNCHD`, that agent stays loaded until I run `launchctl bootout` and delete the plist.
 
-Personal is the whole list:
+## Personal DF_LAUNCHD lists two agents
+
+`profiles/personal/profile.conf` sets the personal list.
 
 ```bash
 DF_LAUNCHD=(
@@ -35,17 +37,25 @@ DF_LAUNCHD=(
 )
 ```
 
-Both use `StartInterval` of an hour, then a stamp. `brew-upgrade` runs `update`, `upgrade`, a greedy cask pass, and `cleanup` at most once a day. `nvim-update` refreshes plugins and treesitter parsers at most once every four days, and a failure is a banner. A failed brew run leaves the stamp alone, so the next hourly tick retries. I prefer the hourly plist to a daily calendar because this laptop sleeps. After wake, launchd catch-up runs the job once the stamp is old enough, instead of waiting out another full day. `qmd-update` is still in the tree and is not in this list, so it does not run.
+Both plists set `StartInterval` to 3600, then each script checks a stamp so the slow command skips most ticks. `brew-upgrade` runs Homebrew `update`, `upgrade`, cask `--greedy`, and `cleanup` at most once every 24 hours. The stamp file is `~/.local/state/brew-upgrade/last_success`. A failed run leaves the stamp in place, so the next tick retries, and that step calls `alert_failure`. `nvim-update` refreshes LazyVim plugins through lazy.nvim and refreshes treesitter parsers at most once every 4 days, with no `user_present` check. On failure, `nvim-update` calls `banner`.
 
-The work profile includes those two and keeps going. I think of the rest in groups.
+I use `StartInterval` 3600 because the laptop sleeps. On wake, launchd runs the agent once the stamp is old enough. `qmd-update` remains at `launchd/qmd-update/` and is not listed, so the personal Mac does not run it.
 
-Upkeep is `caffeine-check` (every two hours, GUI session only, and only if I am there) and `firefox-sync`, which pulls Firefox Sidebery settings back into the repo on a multi-day stamp, commits locally, and never pushes. Doctors and drift checks are `claude-doctor` on Mondays at 09:30, `claude-settings-drift`, `pi-doctor`, and `skill-upstream`. `pr-status` rebuilds an HTML report of pull requests that need me, and nags again each hour while that queue is non-empty. `janitor` waits until after Sunday at 10:00, then writes a cleanup plan for listed checkouts. The tick never deletes. `welcome-back` ticks every minute, treats a lock, half an hour idle, or missed ticks as away, and on the first present tick banners VPN, SSO, and vendor logins. I still do the login.
+## Work DF_LAUNCHD adds the other agents
 
-One aside: the standup page is not an always-on process. `where-we-stand-server` is a sockets agent. launchd listens on localhost, starts the server on the first connection, and the process exits after it has been idle.
+`profiles/work/profile.conf` keeps those two names and adds many more. Upkeep, doctor checks, a pull request report, cleanup, and login recovery are the groups.
 
-## Gates, then a page or a dialog
+`caffeine-check` uses `StartInterval` 7200, loads only in an `Aqua` session, and skips with no later rerun when `user_present` fails. Hammerspoon must be open for the `caffeinate` dialog. `firefox-sync` ticks hourly and copies Firefox Sidebery settings only when the stamp is at least 3 days old, on `main`, with clean target files. A rebase or a merge skips the copy. `firefox-sync` does not push.
 
-Anything interactive calls `user_present` before it talks to me.
+`claude-doctor` runs on Mondays at 09:30 and writes the HTML report with `render_html`. The dialog can close, copy a command, or show the report. `claude-settings-drift` and `pi-doctor` use `StartInterval` 10800 and skip when I am away. `skill-upstream` runs daily at 10:30 and compares skill SHAs with upstream. `pr-status` runs hourly, calls `user_present`, and lists pull requests that need me or my review in an HTML report. While the queue is not empty, later ticks post the banner again, and the dialog opens that report.
+
+Hourly `janitor` writes a cleanup plan after Sunday at 10:00 when I am present and this week has no stamp. The `janitor` tick does not delete. A delete runs only in a separate approval session. `welcome-back` uses `StartInterval` 60. A lock, 30 minutes idle, or a missed tick in sleep counts as away. `welcome-back` shows banners for VPN, SSO, and vendor logins on the first present tick. I complete those logins.
+
+`where-we-stand` runs hourly from 10:00 through 17:00, Sunday through Thursday, in the machine time zone. A failed `user_present` does not queue that hour. `where-we-stand-server` is the sockets agent for the report. launchd listens on localhost and starts the Python process on the first connection. The process exits after about 30 minutes idle.
+
+## Some agents exit when user_present fails
+
+`launchd/lib.sh` defines `user_present`. `nvim-update` does not call it.
 
 ```bash
 # True when the screen is unlocked and there was input within IDLE_MAX_MIN.
@@ -58,8 +68,8 @@ user_present() {
 }
 ```
 
-Away means skip, and do not queue a catch-up for an empty desk. The idle window defaults to ten minutes. A few weekly jobs wait instead, holding the lock, so the Monday doctor still runs once I am back. The lock will not steal a live holder. A dialog I have not dismissed is not free for the next tick to replace.
+`IDLE_MAX_MIN` defaults to 10 minutes. `PRESENT=1` passes the check. `claude-doctor` and `skill-upstream-new` keep the lock and wait. Four hours is the longest `claude-doctor` waits, so the Monday run still starts after I unlock the screen. `lock_acquire` does not take a lock whose owner process is still alive. The owner stays alive while the dialog is open.
 
-A quiet run is a log under `~/.local/state/<name>/`. When there is something to read, `render_html` writes a local page and does not pull in remote content. `banner` is a plain notification. `banner_click` opens an https URL or a file in that state directory through Hammerspoon, and falls back to the plain banner otherwise. `claude-doctor` and `janitor` add a dialog that can copy a command or open the report. `pr-status` opens its report from the dialog. `brew-upgrade` uses `alert_failure` for a failed step: a modal OK with no timeout, called before the lock comes off so the next tick cannot overlap it.
+`render_html` runs `bin/quick-html` and writes an HTML report with no remote content under `~/.local/state/<name>/`. `banner` shows a notification. `banner_click` opens an https URL or a file under `~/.local/state/` when `pgrep` finds Hammerspoon, and otherwise calls `banner`. `alert_failure` is an OK dialog with no timeout. `brew-upgrade` calls `alert_failure` while it still holds the lock.
 
-The personal list never includes the doctors, `pr-status`, or `welcome-back`. Those sessions are not on that machine. A new agent is a directory under `launchd/` and a name in the profiles that should run it. The fleet is the list.
+Personal `DF_LAUNCHD` omits `claude-doctor`, `pr-status`, and `welcome-back`. `install.sh` loads an agent only when `DF_LAUNCHD` names it.
